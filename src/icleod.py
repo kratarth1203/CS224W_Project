@@ -1,7 +1,7 @@
 import snap
 import numpy
 
-
+from generateNetwork import *
 
 '''
 Given a nodeId and a graph, return the egonet
@@ -51,7 +51,7 @@ def adjlist_find_paths( n, m, graph, path=[]):
     nbr.append(node.GetNbrNId(idx))
   for child in nbr:
     if child not in path:
-      child_paths = adjlist_find_paths(child, m, graph, path)
+      child_paths = adjlist_find_paths(child, m, graph, path[:])
       for child_path in child_paths:
         paths.append(child_path)
   return paths
@@ -173,4 +173,6 @@ def getICLEOD(graph_tm1, graph_t):
   for node in getNodeIds(graph_t):
     print getOutlyingScore(node, graph_tm1, graph_t, 2)
  
-  
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_small.txt')
+ 
+getICLEOD(getGraphAtEpoch(graphAtEpochs.keys()[0]), getGraphAtEpoch(graphAtEpochs.keys()[1])) 
