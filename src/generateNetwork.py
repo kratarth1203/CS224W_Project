@@ -3,15 +3,21 @@ import numpy as np
 
 graphAtEpochs = {}
 
+nodeFeatureNames = ['temperature', 'humidity', 'light', 'voltage']
+
+def getNodeFeatures(nid, graph):
+    nodeFeats = []
+    for feat in nodeFeatureNames:
+        nodeFeats.append(graph.GetFltAttrDatN(nid, feat))
+    return nodeFeats
+
 def getBasicGraph(nodeFile, edgeFile):
     Graph = snap.TNEANet.New()
     Graph.AddFltAttrE('probability')
     Graph.AddFltAttrN('xLoc')
     Graph.AddFltAttrN('yLoc')
-    Graph.AddFltAttrN('temperature')
-    Graph.AddFltAttrN('humidity')
-    Graph.AddFltAttrN('light')
-    Graph.AddFltAttrN('voltage')
+    for feat in nodeFeatureNames:
+        Graph.AddFltAttrN(feat)
 
     with open(nodeFile, 'rb') as f1:
         for line in f1:
@@ -30,7 +36,7 @@ def getBasicGraph(nodeFile, edgeFile):
                 prob = float(prob)
                 if prob > 0.75:
                     Eid = Graph.AddEdge(int(src), int(dst))
-                    Graph.AddFltAttrDatN(Eid, prob, 'probability')
+                    Graph.AddFltAttrDatE(Eid, prob, 'probability')
             except:
                 pass
     print Graph.GetEdges()
@@ -49,10 +55,8 @@ def deepCopyGraph(original):
         newGraph.AddNode(nodeid)
         newGraph.AddFltAttrDatN(int(nodeid), original.GetFltAttrDatN(node.GetId(), 'xLoc'), 'xLoc')
         newGraph.AddFltAttrDatN(int(nodeid), original.GetFltAttrDatN(node.GetId(), 'yLoc'), 'yLoc')
-        newGraph.AddFltAttrDatN(int(nodeid), original.GetFltAttrDatN(node.GetId(), 'temperature'), 'temperature')
-        newGraph.AddFltAttrDatN(int(nodeid), original.GetFltAttrDatN(node.GetId(), 'humidity'), 'humidity')
-        newGraph.AddFltAttrDatN(int(nodeid), original.GetFltAttrDatN(node.GetId(), 'light'), 'light')
-        newGraph.AddFltAttrDatN(int(nodeid), original.GetFltAttrDatN(node.GetId(), 'voltage'), 'voltage')
+        for feat in noddeFeatureNames:
+            newGraph.AddFltAttrDatN(int(nodeid), original.GetFltAttrDatN(node.GetId(), feat), feat)
 
     for edge in original.Edges():
         eid = newGraph.AddEdge(edge.GetSrcNId(), edge.GetDstNId())
