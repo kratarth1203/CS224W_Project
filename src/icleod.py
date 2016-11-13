@@ -12,8 +12,8 @@ Given a nodeId and a graph, return the egonet
 def getEgonet(nodeId, graph):
   nbr = []
   node = graph.GetNI(nodeId)
-  for idx in range(node.GetDeg()):
-     nbr.append(node.GetNbrNId(idx)) 
+  for idx in range(node.GetOutDeg()):
+     nbr.append(node.GetOutNId(idx)) 
   return nbr
 
 
@@ -27,8 +27,8 @@ def getSuperEgonet(nodeId, graph):
   nbr = []
   nbr.extend(getEgonet(nodeId, graph))
   node = graph.GetNI(nodeId)
-  for idx in range(node.GetDeg()):
-     nbr_id = node.GetNbrNId(idx)
+  for idx in range(node.GetOutDeg()):
+     nbr_id = node.GetOutNId(idx)
      nbr.extend(getEgonet(nbr_id, graph))
   return nbr
   
@@ -41,14 +41,15 @@ Find paths from node index n to m
          graph: snap graph data structure
 '''
 def adjlist_find_paths( n, m, graph, path=[]):
+  n = int(n)
   path = path + [n]
   if n == m:
     return [path]
   paths = []
   nbr = []
   node = graph.GetNI(n)
-  for idx in range(node.GetDeg()):
-    nbr.append(node.GetNbrNId(idx))
+  for idx in range(node.GetOutDeg()):
+    nbr.append(node.GetOutNId(idx))
   for child in nbr:
     if child not in path:
       child_paths = adjlist_find_paths(child, m, graph, path[:])
@@ -65,10 +66,10 @@ Given a nodeId (n) return the sum of weights with all its neighbors
 def getSumWeight(n, graph):
   node = graph.GetNI(n)
   nbrs = []
-  for idx in range(node.GetDeg()):
-     nbrs.append(node.GetNbrNId(idx))
+  for idx in range(node.GetOutDeg()):
+     nbrs.append(node.GetOutNId(idx))
   sum_ = 0.0
-  for nbr in nbr:
+  for nbr in nbrs:
     sum_ += getEdgeAttr(n, nbr, graph)
   return sum_
 
@@ -82,14 +83,18 @@ between it and the nodeId_v1 in the graph.
 def getCloseness(nodeId_v0, nodeId_v1, graph):
   max_weight = -1.0 * np.inf
   paths = adjlist_find_paths( nodeId_v0, nodeId_v1 , graph)
+  flag = False
   for path in paths:
     weight = 1
+    flag = True
     for n,m in zip(path[:-1], path[1:]):
       w = getEdgeAttr(n, m , graph)
       sum_ = getSumWeight(n, graph)
       weight *= ((w * 1.0)/sum_)
     if weight > max_weight:
       max_weight = weight
+  if flag is False:
+    return np.inf
   return max_weight
 
 '''
@@ -102,8 +107,7 @@ def getkCloseness(nodeId_v0, graph):
   nodes.remove(nodeId_v0)
   closeness = []
   for node in nodes:
-    closeness.append(getCloseness(nodeId_v0, node, graph))
-  closeness = np.array(closeness, dtype=np.float32)
+    closeness.append((getCloseness(nodeId_v0, node, graph), node))
   return closeness
 
 '''
@@ -116,7 +120,9 @@ k-closeness neighborhood
 '''
 def getkCloseNeighbor(nodeId_v0, k, graph):
   closeness  = getkCloseness(nodeId_v0, graph)
-  return np.sort(closeness)[k-1], np.argsort(closeness)[k:]
+  closeness = sorted(closeness, key=lambda x: x[0])
+  closeness = np.array(closeness)
+  return closeness[k-1, 0], np.array(closeness[:k,1], dtype=np.int32)
 
 
 '''
@@ -126,11 +132,13 @@ Given an integer code node Id , return the corenet
         k: hyperparamter
 '''
 def getCorenet(nodeId_v0, k, graph):
-  closeness = getCloseness(nodeId_v0, graph)
-  min_closeness = min(closeness)
+  closeness = getkCloseness(nodeId_v0,  graph)
+  closeness = sorted(closeness, key=lambda x: x[0])
+  closeness = np.array(closeness)
+  min_closeness = closeness[0,0]
   k_closeness, k_nbr = getkCloseNeighbor(nodeId_v0, k, graph)
   if min_closeness >= k_closeness:
-    return getSuperEgonet(nodeId_v0)
+    return getSuperEgonet(nodeId_v0, graph)
   else:
     return k_nbr
 
@@ -143,23 +151,23 @@ outlying score for the node nodeIfd.
         graph_t: graoh at time T
 '''
 def getOutlyingScore(nodeId, graph_tm1, graph_t, k):
-  corenet_tm1 = getCloseness(nodeId, k, graph_tm1)
-  corenet_t = getCloseness(nodeId, k, graph_t)
+  corenet_tm1 = getCorenet(nodeId, k, graph_tm1)
+  corenet_t = getCorenet(nodeId, k , graph_t)
 
   c_old = list(set(corenet_tm1).intersection(set(corenet_t)))
   c_removed = list(set(corenet_tm1) - set(c_old))
   c_new = list(set(corenet_t) - set(c_old))
   sum_ = 0.0
   for node in c_old:
-    sum_ += (getCloseness(node, nodeId, graph_tm1) -\
-                      getCloseness(node, nodeId, graph_t))
+    sum_ += (getCloseness(nodeId, node, graph_tm1) -\
+                      getCloseness( nodeId, node,  graph_t))
   for node in c_removed:
-    sum_ += getCloseness(node, nodeId, graph_tm1)
+    sum_ += getCloseness(nodeId, node , graph_tm1)
 
   for n,m in zip(c_new, c_old):
     norm = (getEdgeAttr(n, m, graph_t) * 1.0 ) /\
                      getSumWeight(n, graph_t)
-    sum_ += ((1.0 - norm) * getCloseness(n, nodeId, graph))
+    sum_ += ((1.0 - norm) * getCloseness( nodeId, n, graph))
 
   return sum_
 
