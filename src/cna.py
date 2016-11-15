@@ -65,7 +65,7 @@ def getCnaOutliers(epoch):
     print [x for x in cnaDists[:10]]
 
 
-createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_small.txt')
-#getCommunities()
-getCnaOutliers(2)
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_medium_epochs.txt')
+getCommunities(getGraphAtEpoch(25))
+getCnaOutliers(25)
 

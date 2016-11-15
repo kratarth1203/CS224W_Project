@@ -116,6 +116,8 @@ class DirectedGraph:
             raise NameError('No such attribute in graph')
         if type(node) == int:
             node = self.nidToNodeMap[node]
+        if type(node) in [np.int64, np.int32]:
+            node = self.nidToNodeMap[int(node)]
         val = node.GetAttrDat(attr)
         if not type(val) in [float, int]:
             raise TypeError('Attribute is not float type')
