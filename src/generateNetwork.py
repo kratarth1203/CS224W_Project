@@ -55,7 +55,6 @@ def getBasicGraph(nodeFile, edgeFile):
                     Eid = Graph.AddEdge(int(src), int(dst))
                     Graph.AddFltAttrDatE(Eid, prob, 'probability')
             except Exception as exc:
-                print exc
                 pass
     pickle.dump(probMatrix, open('../data/probMatrix.pkl', 'wb'))
     graphAtEpochs[0] = Graph
@@ -135,7 +134,6 @@ def createAllGraphs(nodeFile, edgeFile, dataFile):
     if os.path.isfile(dataFile[:-4] + '.pkl'):
         global graphAtEpochs
         graphAtEpochs = pickle.load(open(dataFile[:-4] + '.pkl', 'rb'))
-
         if os.path.isfile('../data/probMatrix.pkl'):
             global probMatrix
             probMatrix = pickle.load(open('../data/probMatrix.pkl', 'rb'))

@@ -8,7 +8,6 @@ from collections import defaultdict
 def getCommunities(graph):
     clf = SpectralClustering(affinity='precomputed')
     clf.fit(getProbMatrix()[1:, 1:])
-    print clf.labels_
     cmtyToNode = defaultdict(list)
     nodeToCmty = {}
     for node in graph.Nodes():
@@ -66,7 +65,7 @@ def getCnaOutliers(epoch):
     print [x for x in cnaDists[:10]]
 
 
-createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_medium.txt')
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_small.txt')
 #getCommunities()
 getCnaOutliers(2)
 

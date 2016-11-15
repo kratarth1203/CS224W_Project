@@ -181,6 +181,7 @@ class DirectedGraph:
         val = edge.GetAttrDat(attr)
         if not type(val) == int:
             raise TypeError('Attribute is not integer type')
+        return val
 
     def GetFltAttrDatE(self, edge, attr):
         if not attr in self.edgeFeatures:
@@ -190,6 +191,7 @@ class DirectedGraph:
         val = edge.GetAttrDat(attr)
         if not type(val) in [float, int]:
             raise TypeError('Attribute is not float type')
+        return val
 
     def GetStrAttrDatE(self, edge, attr):
         if not attr in self.edgeFeatures:
@@ -199,6 +201,7 @@ class DirectedGraph:
         val = edge.GetAttrDat(attr)
         if not type(val) == str:
             raise TypeError('Attribute is not string type')
+        return val
 
 class DirectedNode:
     def __init__(self, nid, graph):

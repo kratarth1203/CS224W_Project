@@ -1,4 +1,4 @@
-import snap
+#import snap
 import numpy
 
 from generateNetwork import *
@@ -18,13 +18,13 @@ def deep_list(x):
 Given a nodeId and a graph, return the egonet
 @param: graph: The snap graog data structure
         nodeId: The integer id of the node whose
-                egonet is desired. 
+                egonet is desired.
 '''
 def getEgonet(nodeId, graph):
   nbr = []
   node = graph.GetNI(nodeId)
   for idx in range(node.GetOutDeg()):
-     nbr.append(node.GetOutNId(idx)) 
+     nbr.append(node.GetOutNId(idx))
   return nbr
 
 
@@ -42,7 +42,7 @@ def getSuperEgonet(nodeId, graph):
      nbr_id = node.GetOutNId(idx)
      nbr.extend(getEgonet(nbr_id, graph))
   return nbr
-  
+
 
 '''
 Implementation of Dijktras
@@ -137,7 +137,7 @@ def getCloseness(nodeId_v0, nodeId_v1, graph, edges = None):
         convert(x[1:][0])
     convert(new_path)
     path = path[::-1]
-    
+
     weight = 1.0
     flag = True
     for n,m in zip(path[:-1], path[1:]):
@@ -153,7 +153,7 @@ def getCloseness(nodeId_v0, nodeId_v1, graph, edges = None):
 '''
 Given a core nodeId v0, gets the closeness
 @param: nodeId: integer id of the node whose k-closeness is needed
-        graph: snap graph data structure       
+        graph: snap graph data structure
 '''
 def getkCloseness(nodeId_v0, graph, edges):
   nodes = getNodeIds(graph)
@@ -167,9 +167,9 @@ def getkCloseness(nodeId_v0, graph, edges):
 Given a integer nodeId_v0 and the hyper parameter k, returns the
 k-closeness neighborhood
 @param k: hyper parameter
-       nodeId_v0: the core node integer id whose k-closeness 
+       nodeId_v0: the core node integer id whose k-closeness
                   neighborhood is needed
-       graph: snap graph data structure 
+       graph: snap graph data structure
 '''
 def getkCloseNeighbor(nodeId_v0, k, graph, edges):
   closeness  = getkCloseness(nodeId_v0, graph, edges)
@@ -179,7 +179,7 @@ def getkCloseNeighbor(nodeId_v0, k, graph, edges):
 
 
 '''
-Given an integer code node Id , return the corenet 
+Given an integer code node Id , return the corenet
 @param: nodeId_v0: the integer id of the corenet
         graph: snap graph datra structure
         k: hyperparamter
@@ -196,7 +196,7 @@ def getCorenet(nodeId_v0, k, graph, edges):
     return k_nbr
 
 '''
-Given the graphs at time step T and T-1, calculate the 
+Given the graphs at time step T and T-1, calculate the
 outlying score for the node nodeIfd.
 @param: nodeId: an integer id of the node whose outlying score
                 is required
@@ -225,7 +225,7 @@ def getOutlyingScore(nodeId, graph_tm1, graph_t, k, edges_tm1, edges_t):
   return sum_
 
 '''
-Get IEOutliers based on the snapshot of the graph at two 
+Get IEOutliers based on the snapshot of the graph at two
 separate time instances.
 @param: graph_t: snap object of the graph at time T
         graph_tm1: snap object of the graph at time T-1
@@ -233,11 +233,11 @@ separate time instances.
 def getICLEOD(graph_tm1, graph_t, edges_tm1, edges_t):
   for node in getNodeIds(graph_t):
     print getOutlyingScore(node, graph_tm1, graph_t, 2, edges_tm1, edges_t)
- 
-createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data.txt')
 
-graph_tm1 = getGraphAtEpoch(graphAtEpochs.keys()[2])
-graph_t = getGraphAtEpoch(graphAtEpochs.keys()[3])
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_medium.txt')
+
+graph_tm1 = getGraphAtEpoch(2)
+graph_t = getGraphAtEpoch(16000)
 edges_tm1 = getEdges(graph_tm1)
 edges_t = getEdges(graph_t)
-getICLEOD(graph_tm1, graph_t, edges_tm1, edges_t) 
+getICLEOD(graph_tm1, graph_t, edges_tm1, edges_t)

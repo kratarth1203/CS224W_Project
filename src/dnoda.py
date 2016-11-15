@@ -35,6 +35,6 @@ def getDnodaOutliers(epoch):
     dnodaDists = sorted(dnodaDists, key=lambda x: x[1], reverse=True)
     print [x for x in dnodaDists[:10]]
 
-createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data.txt')
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_small.txt')
 getDnodaOutliers(2)
 
