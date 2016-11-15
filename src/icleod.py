@@ -2,6 +2,17 @@ import snap
 import numpy
 
 from generateNetwork import *
+from collections import *
+
+
+def deep_list(x):
+  """fully copies trees of tuples or lists to a tree of lists.
+     deep_list( (1,2,(3,4)) ) returns [1,2,[3,4]]
+     deep_list( (1,2,[3,(4,5)]) ) returns [1,2,[3,[4,5]]]"""
+  if not ( type(x) == type( () ) or type(x) == type( [] ) ):
+    return x
+  return map(deep_list,x)
+
 
 '''
 Given a nodeId and a graph, return the egonet
@@ -32,6 +43,34 @@ def getSuperEgonet(nodeId, graph):
      nbr.extend(getEgonet(nbr_id, graph))
   return nbr
   
+
+'''
+Implementation of Dijktras
+@param: graph: snap graph data structure
+        initial: source node integer id
+'''
+
+from collections import defaultdict
+from heapq import *
+
+def dijkstra(src, dst, edges):
+  g = defaultdict(list)
+  for l,r,c in edges:
+    g[l].append((c,r))
+
+  q, seen = [(0,src,())], set()
+  while q:
+    (cost,v1,path) = heappop(q)
+    if v1 not in seen:
+      seen.add(v1)
+      path = (v1, path)
+      if v1 == dst: return (cost, path)
+
+      for c, v2 in g.get(v1, ()):
+        if v2 not in seen:
+          heappush(q, (cost+c, v2, path))
+
+  return np.inf
 
 
 '''
@@ -80,21 +119,35 @@ between it and the nodeId_v1 in the graph.
         nodeId_v1: integer id of the node to which closeness is needed
         graph: snap graog data structure
 '''
-def getCloseness(nodeId_v0, nodeId_v1, graph):
+def getCloseness(nodeId_v0, nodeId_v1, graph, edges = None):
   max_weight = -1.0 * np.inf
-  paths = adjlist_find_paths( nodeId_v0, nodeId_v1 , graph)
+  #paths = adjlist_find_paths( nodeId_v0, nodeId_v1 , graph)
+  paths = [dijkstra(nodeId_v0, nodeId_v1, edges)]
+  if paths[0] is np.inf:
+    return 1e6
   flag = False
-  for path in paths:
-    weight = 1
+  for path_ in [paths[0][1]]:
+    new_path = deep_list(path_)
+    path = []
+    def convert( x ):
+      if type(x) is not type( [] ):
+        path.append(x)
+      elif len(x) > 0:
+        path.append(x[0])
+        convert(x[1:][0])
+    convert(new_path)
+    path = path[::-1]
+    
+    weight = 1.0
     flag = True
     for n,m in zip(path[:-1], path[1:]):
-      w = getEdgeAttr(n, m , graph)
+      w = getEdgeAttr(int(n), int(m) , graph)
       sum_ = getSumWeight(n, graph)
       weight *= ((w * 1.0)/sum_)
     if weight > max_weight:
       max_weight = weight
   if flag is False:
-    return np.inf
+    return 1e6
   return max_weight
 
 '''
@@ -102,12 +155,12 @@ Given a core nodeId v0, gets the closeness
 @param: nodeId: integer id of the node whose k-closeness is needed
         graph: snap graph data structure       
 '''
-def getkCloseness(nodeId_v0, graph):
+def getkCloseness(nodeId_v0, graph, edges):
   nodes = getNodeIds(graph)
   nodes.remove(nodeId_v0)
   closeness = []
   for node in nodes:
-    closeness.append((getCloseness(nodeId_v0, node, graph), node))
+    closeness.append((getCloseness(nodeId_v0, node, graph, edges), node))
   return closeness
 
 '''
@@ -118,8 +171,8 @@ k-closeness neighborhood
                   neighborhood is needed
        graph: snap graph data structure 
 '''
-def getkCloseNeighbor(nodeId_v0, k, graph):
-  closeness  = getkCloseness(nodeId_v0, graph)
+def getkCloseNeighbor(nodeId_v0, k, graph, edges):
+  closeness  = getkCloseness(nodeId_v0, graph, edges)
   closeness = sorted(closeness, key=lambda x: x[0])
   closeness = np.array(closeness)
   return closeness[k-1, 0], np.array(closeness[:k,1], dtype=np.int32)
@@ -131,12 +184,12 @@ Given an integer code node Id , return the corenet
         graph: snap graph datra structure
         k: hyperparamter
 '''
-def getCorenet(nodeId_v0, k, graph):
-  closeness = getkCloseness(nodeId_v0,  graph)
+def getCorenet(nodeId_v0, k, graph, edges):
+  closeness = getkCloseness(nodeId_v0,  graph, edges)
   closeness = sorted(closeness, key=lambda x: x[0])
   closeness = np.array(closeness)
   min_closeness = closeness[0,0]
-  k_closeness, k_nbr = getkCloseNeighbor(nodeId_v0, k, graph)
+  k_closeness, k_nbr = getkCloseNeighbor(nodeId_v0, k, graph, edges)
   if min_closeness >= k_closeness:
     return getSuperEgonet(nodeId_v0, graph)
   else:
@@ -150,24 +203,24 @@ outlying score for the node nodeIfd.
         graph_tm1: graph and time T-1
         graph_t: graoh at time T
 '''
-def getOutlyingScore(nodeId, graph_tm1, graph_t, k):
-  corenet_tm1 = getCorenet(nodeId, k, graph_tm1)
-  corenet_t = getCorenet(nodeId, k , graph_t)
+def getOutlyingScore(nodeId, graph_tm1, graph_t, k, edges_tm1, edges_t):
+  corenet_tm1 = getCorenet(nodeId, k, graph_tm1, edges_tm1)
+  corenet_t = getCorenet(nodeId, k , graph_t, edges_t)
 
   c_old = list(set(corenet_tm1).intersection(set(corenet_t)))
   c_removed = list(set(corenet_tm1) - set(c_old))
   c_new = list(set(corenet_t) - set(c_old))
   sum_ = 0.0
   for node in c_old:
-    sum_ += (getCloseness(nodeId, node, graph_tm1) -\
-                      getCloseness( nodeId, node,  graph_t))
+    sum_ += (getCloseness(nodeId, node, graph_tm1, edges_tm1) -\
+                      getCloseness( nodeId, node,  graph_t, edges_t))
   for node in c_removed:
-    sum_ += getCloseness(nodeId, node , graph_tm1)
+    sum_ += getCloseness(nodeId, node , graph_tm1, edges_tm1)
 
   for n,m in zip(c_new, c_old):
     norm = (getEdgeAttr(n, m, graph_t) * 1.0 ) /\
                      getSumWeight(n, graph_t)
-    sum_ += ((1.0 - norm) * getCloseness( nodeId, n, graph))
+    sum_ += ((1.0 - norm) * getCloseness( nodeId, n, graph_t, edges_t))
 
   return sum_
 
@@ -177,10 +230,14 @@ separate time instances.
 @param: graph_t: snap object of the graph at time T
         graph_tm1: snap object of the graph at time T-1
 '''
-def getICLEOD(graph_tm1, graph_t):
+def getICLEOD(graph_tm1, graph_t, edges_tm1, edges_t):
   for node in getNodeIds(graph_t):
-    print getOutlyingScore(node, graph_tm1, graph_t, 2)
+    print getOutlyingScore(node, graph_tm1, graph_t, 2, edges_tm1, edges_t)
  
-createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_small.txt')
- 
-getICLEOD(getGraphAtEpoch(graphAtEpochs.keys()[0]), getGraphAtEpoch(graphAtEpochs.keys()[1])) 
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data.txt')
+
+graph_tm1 = getGraphAtEpoch(graphAtEpochs.keys()[2])
+graph_t = getGraphAtEpoch(graphAtEpochs.keys()[3])
+edges_tm1 = getEdges(graph_tm1)
+edges_t = getEdges(graph_t)
+getICLEOD(graph_tm1, graph_t, edges_tm1, edges_t) 
