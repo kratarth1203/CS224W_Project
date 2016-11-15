@@ -116,6 +116,8 @@ class DirectedGraph:
             raise NameError('No such attribute in graph')
         if type(node) == int:
             node = self.nidToNodeMap[node]
+        if type(node) in [np.int64, np.int32]:
+            node = self.nidToNodeMap[int(node)]
         val = node.GetAttrDat(attr)
         if not type(val) in [float, int]:
             raise TypeError('Attribute is not float type')
@@ -181,6 +183,7 @@ class DirectedGraph:
         val = edge.GetAttrDat(attr)
         if not type(val) == int:
             raise TypeError('Attribute is not integer type')
+        return val
 
     def GetFltAttrDatE(self, edge, attr):
         if not attr in self.edgeFeatures:
@@ -190,6 +193,7 @@ class DirectedGraph:
         val = edge.GetAttrDat(attr)
         if not type(val) in [float, int]:
             raise TypeError('Attribute is not float type')
+        return val
 
     def GetStrAttrDatE(self, edge, attr):
         if not attr in self.edgeFeatures:
@@ -199,6 +203,7 @@ class DirectedGraph:
         val = edge.GetAttrDat(attr)
         if not type(val) == str:
             raise TypeError('Attribute is not string type')
+        return val
 
 class DirectedNode:
     def __init__(self, nid, graph):

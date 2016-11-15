@@ -30,11 +30,13 @@ def getDnodaOutliers(epoch):
     dnodaDists = []
     for node in graph.Nodes():
         nid = node.GetId()
+        if nid == 1:
+            print epoch, getNodeFeatures(nid, graph)
         dnoda_score = np.linalg.norm(np.array(getNodeFeatures(nid, graph)) - getDnodaScore(nid, epoch))
         dnodaDists.append((nid, dnoda_score))
     dnodaDists = sorted(dnodaDists, key=lambda x: x[1], reverse=True)
     print [x for x in dnodaDists[:10]]
 
-createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data.txt')
-getDnodaOutliers(2)
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_less_epochs.txt')
+getDnodaOutliers(25)
 
