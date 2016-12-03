@@ -3,6 +3,10 @@ from FeatGraph import *
 from generateNetwork import *
 import numpy as np
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 def getDnodaScore(nid, epoch):
     graph = getGraphAtEpoch(epoch)
     node = graph.GetNI(nid)
@@ -36,7 +40,12 @@ def getDnodaOutliers(epoch):
         dnodaDists.append((nid, dnoda_score))
     dnodaDists = sorted(dnodaDists, key=lambda x: x[1], reverse=True)
     print [x for x in dnodaDists[:10]]
+    allDists = sorted(dnodaDists, key=lambda x: x[0])
+    return [x[1] for x in allDists]
 
-createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_less_epochs.txt')
-getDnodaOutliers(25)
 
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_medium_epochs.txt')
+allDists = getDnodaOutliers(25)
+
+plt.plot(np.arange(1, 55), allDists)
+plt.savefig('dnoda_medium_epochs.png')
