@@ -52,12 +52,17 @@ def anomaly():
       pass
   data = np.array(data, dtype=np.float32)
   mse = np.mean(data, axis = 1)
-  idx = np.argsort(mse)[:10]
-  print(mse[idx])
-  print(idx)
-  for i in idx:
-    print('epoch = ', i/54 + 1, ' sensor = ' , i%54)
-  # In python, the visualization could be done with tools like numpy/matplotlib or numpy/PIL
+  epoch_mse = {}
+  for i, item in enumerate(mse):
+    if (i/54 + 1) in epoch_mse.keys():
+      epoch_mse[i/54 + 1].append((item, i))
+    else:
+      epoch_mse[i/54 + 1] = [(item, i)]
+  for k in epoch_mse.keys():
+    mse_ = epoch_mse[k]
+    sorted_mse = sorted(mse_,key = lambda x:(x[0], x[1]))
+    for item, ct in sorted_mse[:3]:
+      print('epoch = ', k , ' sensor = ' , ct%54, ' with mse = ', item)
 
 anomaly()
 
