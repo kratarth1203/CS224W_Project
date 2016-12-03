@@ -5,6 +5,10 @@ from generateNetwork import *
 from collections import *
 
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 def deep_list(x):
   """fully copies trees of tuples or lists to a tree of lists.
      deep_list( (1,2,(3,4)) ) returns [1,2,[3,4]]
@@ -238,8 +242,8 @@ def getICLEOD(graph_tm1, graph_t, edges_tm1, edges_t):
   for node in getNodeIds(graph_t):
     scores.append((node, getOutlyingScore(node, graph_tm1, graph_t, 2, edges_tm1, edges_t)))
   dists = sorted(scores, key=lambda x: x[1], reverse=True)
-  print [x for x in dists[:10]]
-  return dists[:10]
+  allDists = sorted(dists, key=lambda x: x[0])
+  return [x[1] for x in allDists]
 
 createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_medium_epochs.txt')
 
@@ -248,4 +252,7 @@ graph_tm1 = getGraphAtEpoch(24)
 graph_t = getGraphAtEpoch(25)
 edges_tm1 = getEdges(graph_tm1)
 edges_t = getEdges(graph_t)
-print getICLEOD(graph_tm1, graph_t, edges_tm1, edges_t)
+allDists = getICLEOD(graph_tm1, graph_t, edges_tm1, edges_t)
+
+plt.plot(np.arange(1, 55), allDists)
+plt.savefig('icleod_medium_epochs.png')

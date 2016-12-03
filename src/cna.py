@@ -5,6 +5,9 @@ import numpy as np
 from sklearn.cluster import SpectralClustering
 from collections import defaultdict
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 def getCommunities(graph):
     clf = SpectralClustering(affinity='precomputed')
     clf.fit(getProbMatrix()[1:, 1:])
@@ -62,10 +65,13 @@ def getCnaOutliers(epoch):
         cna_score = np.linalg.norm(np.array(getNodeFeatures(nid, graph)) - getCnaScore(nid, epoch, CmtyToNode, nodeToCmty[nid]))
         cnaDists.append((nid, cna_score))
     cnaDists = sorted(cnaDists, key=lambda x: x[1], reverse=True)
-    print [x for x in cnaDists[:10]]
+    allDists = sorted(cnaDists, key=lambda x: x[0])
+    return [x[1] for x in allDists]
 
 
 createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_medium_epochs.txt')
 getCommunities(getGraphAtEpoch(25))
-getCnaOutliers(25)
+allDists = getCnaOutliers(25)
 
+plt.plot(np.arange(1, 55), allDists)
+plt.savefig('cna_medium_epochs.png')

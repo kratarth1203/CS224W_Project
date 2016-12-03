@@ -5,6 +5,10 @@ import numpy as np
 import cPickle as pickle
 import os
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 graphAtEpochs = {}
 max_epoch = -1
 nodeFeatureNames = ['temperature', 'humidity', 'light', 'voltage']
@@ -193,4 +197,31 @@ def createAllGraphs(nodeFile, edgeFile, dataFile):
     pickle.dump(graphAtEpochs, open(dataFile[:-4] + '.pkl', 'wb'))
 
 
+createAllGraphs('../data/mote_locs.txt', '../data/connectivity.txt', '../data/data_less_epochs.txt')
+#allDists = getDnodaOutliers(25)
 
+print graphAtEpochs[0].GetEdges()
+'''
+epochPlot = 25
+nodeFeats_tm1 = [getNodeFeatures(nid, graphAtEpochs[epochPlot-1]) for nid in xrange(1,55)]
+
+nodeFeats_t = [getNodeFeatures(nid, graphAtEpochs[epochPlot]) for nid in xrange(1,55)]
+
+plt.scatter(np.arange(1, 55), [x[0] for x in nodeFeats_tm1], color='red', marker='o')
+plt.scatter(np.arange(1, 55), [x[0] for x in nodeFeats_t], color='green', marker='o')
+plt.savefig('temperature_24_25.png')
+plt.clf()
+plt.scatter(np.arange(1, 55), [x[1] for x in nodeFeats_tm1], color='red', marker='*')
+plt.scatter(np.arange(1, 55), [x[1] for x in nodeFeats_t], color='green', marker='*')
+plt.savefig('humidity_24_25.png')
+plt.clf()
+plt.scatter(np.arange(1, 55), [x[2] for x in nodeFeats_tm1], color='red', marker='+')
+plt.scatter(np.arange(1, 55), [x[2] for x in nodeFeats_t], color='green', marker='+')
+plt.savefig('light_24_25.png')
+plt.clf()
+
+plt.scatter(np.arange(1, 55), [x[3] for x in nodeFeats_tm1], color='red', marker='d')
+plt.scatter(np.arange(1, 55), [x[3] for x in nodeFeats_t], color='green', marker='d')
+plt.savefig('volt_24_25.png')
+plt.clf()
+'''
